@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Import project styles */
+@import "../styles/globals.css";
+/* 
+html {
+  @apply bg-background text-foreground;
+} */
