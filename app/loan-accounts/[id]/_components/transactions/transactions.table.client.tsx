@@ -1,21 +1,28 @@
 "use client";
 import {
+  type Column,
   type ColumnFiltersState,
-  type SortingState,
-  useReactTable,
+  flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
+  getFacetedMinMaxValues,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  getFacetedMinMaxValues,
-  flexRender,
-  type Column,
-  type RowData,
+  getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable
 } from "@tanstack/react-table";
-import { AlertCircleIcon, LucideLoader2, SearchIcon } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useId, useMemo, useState } from "react";
+import { AlertCircleIcon, LucideRefreshCcw, SearchIcon } from "lucide-react";
+import { useId, useMemo, useState } from "react";
+import { Input } from "../../../../../components/primitives/input";
+import { Label } from "../../../../../components/primitives/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../../../components/primitives/select";
 import {
   Table,
   TableBody,
@@ -24,57 +31,60 @@ import {
   TableHeader,
   TableRow,
 } from "../../../../../components/primitives/table";
-import { Label } from "../../../../../components/primitives/label";
-import { Input } from "../../../../../components/primitives/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../../../components/primitives/select";
 
-import { type ColumnDef } from "@tanstack/react-table";
-import { RowPerPage } from "../../../../../components/ui/table/row.per.page";
-import { Alert, AlertDescription, AlertTitle } from "../../../../../components/primitives/alert";
+
+import { Button } from "@/components/primitives/button";
+import { RowPerPage } from "@/components/ui/table/footer/row.per.page";
 import { type TransactionQueryData, useLiveTransactions } from "@/hooks/useTransactionQuery";
-import { TransactionRow } from "@/types";
+import columns from "./columns";
 
 function TransactionsDataTable({
   loanId,
-  columns,
-  data,
+  initialData,
   totalPages,
   pagination: initialPagination,
-  error,
+  error: serverError,
+  enableLiveDataOnMount = true,
 }: {
   loanId: string;
-  columns: ColumnDef<TransactionRow>[];
-  data: TransactionQueryData;
+  initialData?: TransactionQueryData;
   error?: string;
   totalPages: number;
   pagination: { pageIndex: number; pageSize: number };
+  enableLiveDataOnMount?: boolean;
 }) {
   const [pagination, setPagination] = useState<{
     pageIndex: number;
     pageSize: number;
   }>(initialPagination);
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([
+    {
+      id: "transactionDate",
+      desc: true
+    }
+  ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  // const [rowSelection, setRowSelection] = useState({});
+  const [liveDataEnabled, setLiveDataEnabled] = useState(enableLiveDataOnMount);
 
-  const {data:txData,isLoading,isFetching,isPending} = useLiveTransactions(data,loanId,pagination);
+  const {data:txData,error:clientError,isLoading,isFetching,isPending, refetch,isConnected} = useLiveTransactions(loanId,initialData,pagination,liveDataEnabled);
 
   const loading = isLoading || isPending || isFetching;
 
+  const error = clientError || serverError;
+
+  // useEffect(() => {
+  //   if(rowSelection && Object.keys(rowSelection).length > 0){
+  //     console.log("Selected rows:", rowSelection);
+  //   }
+  // }, [rowSelection]);
 
   const table = useReactTable({
     data:txData?.rows||[],
     columns,
-    pageCount: totalPages || 0,
+    pageCount: txData.totalPages,
     state: {
-      sorting: [{
-        id: 'transactionDate',
-        desc: true
-      }],
+      sorting: sorting,
       columnFilters,
       pagination,
     },
@@ -89,42 +99,50 @@ function TransactionsDataTable({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    // onSortingChange: setSorting,
-    onPaginationChange: setPagination,
+    onSortingChange: setSorting,
+    onPaginationChange: (updater) => {
+      setPagination(updater);
+      refetch();
+    },
+    // onRowSelectionChange: (updater) => {
+    //   setRowSelection(updater);      
+    // },
+    // enableRowSelection: true,
     enableSortingRemoval: false,
   });
 
   return (
     <div className="w-full">
       <div className="rounded-md border">
-        <div className="flex flex-wrap gap-3 px-2 py-6">
-          <div className="w-44">
-            <Filter column={table.getColumn("transactionDate")!} />
-          </div>
-          <div className="w-36">
-            <Filter column={table.getColumn("type")!} />
-          </div>
-          <div className="w-36">
-            <Filter column={table.getColumn("status")!} />
-          </div>
-        {error && (
-        <Alert variant="destructive" borderless className="m-2">
-          <AlertCircleIcon />
-          <AlertTitle>Error!</AlertTitle>
-          <AlertDescription>
-            <p>{error ? error : "Could not retrieve the data, try again."}</p>
-          </AlertDescription>
-        </Alert>
-      )}
-        </div>
-        <div className="relative">
-          {loading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50">
-              <span className="loading animate-spin text-primary">
-                <LucideLoader2 />
-              </span>
+        <div className="flex items-center pr-2">
+            <div className="grow flex flex-wrap gap-3 px-2 py-6">
+            <div className="w-44">
+              <Filter column={table.getColumn("transactionDate")!} />
             </div>
-          )}
+            <div className="w-36">
+              <Filter column={table.getColumn("type")!} />
+            </div>
+            <div className="w-36">
+              <Filter column={table.getColumn("status")!} />
+            </div>
+          </div>
+
+          <div>
+            <Button variant={'orange'} size="sm" onClick={()=>refetch()} disabled={loading}>
+             <LucideRefreshCcw /> Refresh
+            </Button>
+            {/* <LiveDataButton liveDataEnabled={liveDataEnabled} isConnected={isConnected} onClick={() => setLiveDataEnabled(!liveDataEnabled)} /> */}
+          </div>
+
+        </div>
+       
+      <div className="relative">
+        {loading && !table.getRowModel().rows.length && (
+          <div className="absolute inset-0 z-10 bg-white/50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
+        )}
+
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -149,7 +167,8 @@ function TransactionsDataTable({
             </TableHeader>
             <TableBody className="relative">
               {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
+                <>
+                {table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
@@ -163,7 +182,27 @@ function TransactionsDataTable({
                       </TableCell>
                     ))}
                   </TableRow>
-                ))
+                ))}
+                  { table.getRowModel().rows.length < pagination.pageSize && (
+                    [...Array(pagination.pageSize - table.getRowModel().rows.length)].map((_, index) => (
+                      <TableRow key={`empty-${index}`} className="h-10">
+                        <TableCell colSpan={columns.length}>&nbsp;</TableCell>
+                      </TableRow>
+                    ))
+                  )
+                }</>
+              ) :error ?(
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-red-500"
+                  >
+                    <div className="flex justify-center items-center">
+                      <AlertCircleIcon className="mr-2" />
+                      {String(error)}
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : !loading ? (
                 <TableRow>
                   <TableCell
@@ -173,19 +212,20 @@ function TransactionsDataTable({
                     No results.
                   </TableCell>
                 </TableRow>
-              ) : (
+              ):(
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
                     className="h-24 text-center"
-                  ></TableCell>
+                  >
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
           <RowPerPage
             table={table}
-            key={table.getState().pagination.pageIndex + totalPages}
+            // totalpages={totalPages}
           />
         </div>
       </div>

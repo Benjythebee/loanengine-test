@@ -1,11 +1,18 @@
 'use client'
-import {type TransactionRow, type Status, type TransactionType} from '@/types'
-import {Checkbox} from '@/components/primitives/checkbox'
-import {type  ColumnDef} from '@tanstack/react-table'
+import { Checkbox } from '@/components/primitives/checkbox'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/primitives/tooltip'
+import { cn, formatDate } from '@/lib/utils'
+import { type Status, type TransactionRow, type TransactionType } from '@/types'
+import { SortingFn, type ColumnDef } from '@tanstack/react-table'
+import { ArrowDown01Icon, ArrowUp10Icon } from 'lucide-react'
 import { Badge } from '../../../../../components/primitives/badge'
-import { cn } from '@/lib/utils'
-import { ArrowDown01Icon, ArrowUp10Icon, ArrowUpDownIcon } from 'lucide-react'
 
+const dateSortingFn: SortingFn<TransactionRow> = (rowA, rowB, columnId) => {
+  const dateA = new Date(rowA.getValue<string>(columnId)).getTime();
+  const dateB = new Date(rowB.getValue<string>(columnId)).getTime();
+  
+  return dateA - dateB;
+};
 
 const columns: ColumnDef<TransactionRow>[] = [
   {
@@ -30,6 +37,8 @@ const columns: ColumnDef<TransactionRow>[] = [
       label:'Transaction date'
     },
     accessorKey: 'transactionDate',
+    enableSorting: true,
+    sortingFn:dateSortingFn,
     header: ({column})=>{
       return <div className='flex cursor-pointer items-center' onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Transaction date {column.getIsSorted() === "asc"?<ArrowDown01Icon className='size-4'/> : <ArrowUp10Icon className='size-4' />}
@@ -37,14 +46,34 @@ const columns: ColumnDef<TransactionRow>[] = [
     },
     cell: ({ row }) => (
       <div className='flex items-center gap-3'>
-        {row.getValue<string>('transactionDate').split('T')[1] /*//.split('T')[0] */}
+      <Tooltip>
+        <TooltipTrigger asChild><span>
+
+        {formatDate(row.getValue<string>('transactionDate'))}
+        </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{new Date(row.getValue<string>('transactionDate')).toLocaleString()}</p>
+          </TooltipContent>
+      </Tooltip>
       </div>
     )
   },
   {
     header: 'Value date',
     accessorKey: 'valueDate',
-    cell: ({ row }) => <div>{row.getValue<string>('valueDate')!.split('T')[0]}</div>,
+    cell: ({ row }) => <div>
+            <Tooltip>
+        <TooltipTrigger asChild><span>
+
+        {formatDate(row.getValue<string>('valueDate'))}
+        </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{new Date(row.getValue<string>('valueDate')).toLocaleString()}</p>
+          </TooltipContent>
+      </Tooltip>
+    </div>,
     enableSorting: true,
     meta: {
       filterVariant: 'range'

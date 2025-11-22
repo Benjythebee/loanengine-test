@@ -1,7 +1,6 @@
-import columns from "@/app/loan-accounts/[id]/_components/transactions/columns"
-import { TransactionsDataTable } from "@/app/loan-accounts/[id]/_components/transactions/transaction.dynamic.table"
-import { sleep } from "@/lib/utils"
-import { backendData, getMockData } from "@/mock/data";
+import { TransactionsDataTable } from "@/app/loan-accounts/[id]/_components/transactions/transactions.table.client";
+import { sleep } from "@/lib/utils";
+import { getMockData } from "@/mock/data";
 
 const getData = async (loanId:string, pagination:{page:number, size:number}, sorting:any) => {
     // Simulate network delay
@@ -26,8 +25,7 @@ export const TransactionTable = async ({loanId,searchParams}:{loanId:string, sea
 
     return <TransactionsDataTable
         loanId={loanId}
-        columns={columns} 
-        data={data} 
+        initialData={undefined} 
         totalPages={data?.totalPages || 0}
         pagination={{pageIndex, pageSize}}
             />

@@ -1,4 +1,4 @@
-import { DecoratorHelpers } from "@storybook/addon-themes";
+import { DecoratorHelpers, withThemeByClassName } from "@storybook/addon-themes";
 import type { ReactRenderer } from "@storybook/nextjs-vite";
 import { ThemeProvider, type ThemeProviderProps, useTheme } from "next-themes";
 import React from "react";

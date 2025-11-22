@@ -6,7 +6,8 @@ let currentDate = new Date(2025, 5, 1); // Start date: June 1, 2025
 function randomDate() {
   // Add 1-7 days to the current date
   const daysToAdd = Math.floor(Math.random() * 7) + 1;
-  currentDate = new Date(currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+  const randomHours = Math.floor(Math.random() * 24);
+  currentDate = new Date(currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000 + randomHours * 60 * 60 * 1000);
   return currentDate.toISOString()
 }
 
@@ -75,5 +76,7 @@ export const generateMockTransactions = (count:number=Math.floor(Math.random() *
     startingBalance = d.closingBalance;
     transactions.push(d);
   }
+  // reset old date after generation
+  currentDate = new Date(2024, 5, 1);
   return transactions;
 }

@@ -1,9 +1,15 @@
 import type { Preview } from "@storybook/nextjs-vite";
-import "./preview.css";
+import { createNavigation } from '@storybook/nextjs/navigation.mock';
 import { withNextThemes } from "./decorators/with-next-themes";
+import { withQueryProvider } from "./decorators/with-query-provider";
+import "./preview.css";
 
 const preview: Preview = {
   parameters: {
+    nextjs: {
+      appDirectory: true,
+      router:createNavigation({})
+    },
     backgrounds: {
       disable: true,
     },
@@ -29,6 +35,7 @@ const preview: Preview = {
       disableTransitionOnChange: true,
       attribute: "class",
     }),
+    withQueryProvider
   ],
 };
 

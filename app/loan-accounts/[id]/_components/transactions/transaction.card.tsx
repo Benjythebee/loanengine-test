@@ -1,10 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card"
-import { TableSkeleton } from "@/components/ui/table/skeleton.table"
 import { Suspense } from "react"
-import { TransactionTable } from "./transaction.table"
-import { TableCell, TableRow } from "@/components/primitives/table"
-import { Skeleton } from "@/components/primitives/skeleton"
-import { cn } from "@/lib/utils"
+import { TransactionsTableSkeleton } from "./transactions.skeleton.table"
+import { TransactionTable } from "./transactions.table.ssr"
 
 type LoanTransactionsCardProps = {
     loanId: string;
@@ -22,22 +19,9 @@ export const LoanTransactionsCard = ({loanId,searchParams}:LoanTransactionsCardP
            <CardTitle>Transactions</CardTitle>
           </CardHeader>
           <CardContent className='ps-2 relative'>
-            <Suspense fallback={<TableSkeleton filterHeader={filterSkeleton} childrenHeader={headerSkeleton} childrenBody={rowSkeleton} />}>
+            <Suspense fallback={<TransactionsTableSkeleton filterCount={3} headerCount={7} rowCount={3} />}>
                 <TransactionTable loanId={loanId} searchParams={searchParams}/>
             </Suspense>
           </CardContent>
         </Card>
 }
-
-const filterSkeleton = [...Array(3)].map((_, i) =><Skeleton key={i} className="h-6 w-32" />)
-
-const headerSkeleton = [...Array(6)].map((_, i) => (
-              <TableCell key={i}>
-                <Skeleton className="h-5" />
-              </TableCell>
-          ))
-const rowSkeleton = [...Array(7)].map((_, i) => (
-              <TableCell key={i}>
-                <Skeleton className={cn("h-4",i==5?"w-8":"h-4")} />
-              </TableCell>
-          ))

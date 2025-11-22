@@ -1,6 +1,4 @@
 'use client'
-import { usePathname } from "next/navigation";
-import React, { type ReactElement } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,6 +9,8 @@ import {
 } from "@/components/primitives/breadcrumb";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { capitalize } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import React, { type ReactElement } from "react";
 
 export function AppSidebarBreadcrumbs() {
   const pathname = usePathname();
@@ -61,7 +61,7 @@ export function AppSidebarBreadcrumbs() {
       <BreadcrumbList>
         {isRoot && (
           <BreadcrumbItem>
-            <BreadcrumbPage>Welcome</BreadcrumbPage>
+            <BreadcrumbPage>/</BreadcrumbPage>
           </BreadcrumbItem>
         )}
 

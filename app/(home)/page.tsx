@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
-import {  LucideList } from "lucide-react";
-import { LoansList } from "./_components/list.loans";
+import { LoansListTable } from "@/components/ui/loan-list/list.loans.ssr";
+import { LucideList } from "lucide-react";
 
 export const HomePage = () => { 
 
@@ -15,7 +15,7 @@ export const HomePage = () => {
             <CardTitle className="flex items-center gap-2"><LucideList className="h-4 w-4 text-muted-foreground" /> Loan accounts</CardTitle>
           </CardHeader>
           <CardContent className='p-2'>
-            <LoansList />
+            <LoansListTable />
           </CardContent>
         </Card>
 

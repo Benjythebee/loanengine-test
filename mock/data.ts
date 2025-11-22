@@ -23,22 +23,34 @@ const getMockDataMetadata = () => {
 
 const getMockData = (loanId:string,pagination:{page: number,size:number}) => {
     const data = backendData.get(loanId);
+
     if(!data){
+        const c= generateMockTransactions(Math.random() * 50+10)
+        backendData.set(loanId,{closingBalance: c.length > 0 ? c[c.length-1].closingBalance : 0, rows: c});
+        const pages = Math.floor(c.length / pagination.size);
         return {
-            rows: [] as TransactionRow[],
-            totalPages: 0,
-            closingBalance: 0,
+            rows: c.slice(pagination.page * pagination.size, (pagination.page + 1) * pagination.size),
+            totalPages: pages,
+            closingBalance: c.length > 0 ? c[c.length -1].closingBalance : 0,
         }
     }
 
     const dataRows = data.rows.slice(pagination.page * pagination.size, (pagination.page + 1) * pagination.size);
-    const totalPages = Math.ceil(data.rows.length / pagination.size);
+    const totalPages = Math.floor(data.rows.length / pagination.size);
 
     return {
         rows: dataRows,
         totalPages,
         closingBalance: data.closingBalance,
     }
+}
+
+const getMockTotalPages = (id:string,pagination:{pageIndex: number,pageSize:number}) => {
+    const data = backendData.get(id);
+    if(!data){
+        return 0;
+    }
+    return Math.floor(data.rows.length / pagination.pageSize);
 }
 
 const addMockDataTx = (loanId:string,isNow:boolean = false) => {
@@ -55,6 +67,7 @@ const addMockDataTx = (loanId:string,isNow:boolean = false) => {
     data.rows.push(newTx);
     data.closingBalance = newTx.closingBalance;
     backendData.set(loanId,data);
+
     return {
         closingBalance: data.closingBalance,
         rows: [newTx]
@@ -72,4 +85,5 @@ const deleteMockDataTx = (loanId:string) => {
     return {data, removedTx};
 }
 
-export {backendData, getMockData, getMockDataMetadata, addMockDataTx, deleteMockDataTx}
+export { addMockDataTx, backendData, deleteMockDataTx, getMockData, getMockDataMetadata, getMockTotalPages };
+
