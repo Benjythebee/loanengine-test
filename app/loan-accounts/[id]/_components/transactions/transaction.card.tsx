@@ -8,6 +8,7 @@ type LoanTransactionsCardProps = {
     searchParams: {
         page?: string;
         size?: string;
+        withFakeSSR?: string;
     };
 }
 
