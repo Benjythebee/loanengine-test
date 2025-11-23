@@ -19,8 +19,8 @@ import {
 } from "@/components/primitives/select";
 import { Separator } from "@/components/primitives/separator";
 import { backendData } from "@/mock/data";
-import { STATUS_TYPES, TRANSACTION_TYPES, TransactionType } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
+import { STATUS_TYPES, TRANSACTION_TYPES, TransactionRow, TransactionType } from "@/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LucidePlusCircle } from "lucide-react";
 import { ComponentProps, useState } from "react";
 import { useLoanID } from "../../../id-provider";
@@ -54,6 +54,58 @@ export const DialogAddTransactionForm = ({onClose}:{onClose?: React.Dispatch<Rea
   const [error, setError] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
+
+  const queryKey = ["transactions", loanID, 0];
+
+  const mutation = useMutation<TransactionRow, Error, TransactionRow>({
+    mutationFn:async (newRow: TransactionRow) => {
+      // Simulate server persist: update backendData (mock)
+      const c = backendData.get(loanID);
+      if (c) {
+        const updated = {
+          ...c,
+          rows: [...c.rows, newRow],
+          closingBalance: newRow.closingBalance,
+        };
+        backendData.set(loanID, updated);
+      } else {
+        backendData.set(loanID, { rows: [newRow], closingBalance: newRow.closingBalance });
+      }
+      // return row as server response
+      return newRow;
+    },
+          // optimistic update
+      onMutate: async (newRow: any) => {
+        await queryClient.cancelQueries({ queryKey });
+
+        const previous = queryClient.getQueryData(queryKey);
+
+        queryClient.setQueryData(queryKey, (old: any) => {
+          const prev = old || { rows: [], closingBalance: 0 };
+          const rows = [...(prev.rows || []), newRow];
+          return {
+            ...prev,
+            rows,
+            closingBalance: newRow.closingBalance,
+          };
+        });
+
+        return { previous };
+      },
+      onError: (_err, _newRow, context: any) => {
+        // rollback
+        if (context?.previous) {
+          queryClient.setQueryData(queryKey, context.previous);
+        }
+        setError("Failed to add transaction. Please try again.");
+      },
+      onSettled: async () => {
+        // ensure server state / refetch
+        await queryClient.invalidateQueries({ queryKey });
+        setLoading(false);
+      },
+});
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -65,25 +117,25 @@ export const DialogAddTransactionForm = ({onClose}:{onClose?: React.Dispatch<Rea
       valueDate: new Date(`${formData.get("valueDate")} ${now.toTimeString().split(' ')[0]}`),
     }
 
-    if(dates.transactionDate > new Date()){
+    if (dates.transactionDate > new Date()) {
       setError("Transaction date cannot be in the future.");
       return;
     }
-    if(dates.valueDate > new Date()){
+    if (dates.valueDate > new Date()) {
       setError("Value date cannot be in the future.");
       return;
     }
 
     const row = {
-      id: Math.random().toString(36).substr(2, 9), // Generate a random ID
+      id: Math.random().toString(36).substr(2, 9),
       transactionDate: dates.transactionDate.toISOString(),
       valueDate: dates.valueDate.toISOString(),
       type: formData.get("type") as TransactionType,
       status: formData.get("status") as any,
-      description: formData.get("description") as string,
+      description: (formData.get("description") as string) || "",
       debit: Number(formData.get("debit")),
       credit: Number(formData.get("credit")),
-      closingBalance: 0, // Placeholder, will be calculated later
+      closingBalance: 0,
     };
 
     if (row.debit === 0 && row.credit === 0) {
@@ -95,29 +147,20 @@ export const DialogAddTransactionForm = ({onClose}:{onClose?: React.Dispatch<Rea
     }
 
     setLoading(true);
+
+    // compute optimistic closing balance based on current backendData (or cache)
     const c = backendData.get(loanID);
-    row.closingBalance =
-      (c?.closingBalance || 0) +
-      (Number(row.credit) || 0) -
-      (Number(row.debit) || 0);
+    row.closingBalance = (c?.closingBalance || 0) + (Number(row.credit) || 0) - (Number(row.debit) || 0);
 
-    if (c) {
-      c.rows.push(row);
-      c.closingBalance = row.closingBalance;
-      backendData.set(loanID, c!);
-    }
-
-    // Add your API call here to submit the transaction
-    try {
-      // Invalidate and refetch the transactions query
-      queryClient.invalidateQueries({ queryKey: ["transactions", loanID, 0] });
-
-      // Close the dialog
-      onClose && onClose(false);
-    } catch (error) {
-      setError("Failed to add transaction. Please try again.");
-    }
-    setLoading(false);
+    // trigger optimistic mutation
+    mutation.mutate(row, {
+      onSuccess: () => {
+        onClose && onClose(false);
+      },
+      onError: () => {
+        // error handled in mutation config; ensure loading state handled in onSettled
+      },
+    });
   };
 
 
