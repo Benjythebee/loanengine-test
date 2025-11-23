@@ -1,5 +1,5 @@
 import { TransactionQueryData } from "@/hooks/useTransactionQuery";
-import { generateMockTransaction, generateMockTransactions } from "@/lib/transactions-helper";
+import { generateMockTransactions } from "@/lib/transactions-helper";
 import { TransactionRow } from "@/types";
 import { v7 as uuidv7 } from 'uuid';
 
@@ -63,7 +63,7 @@ const getMockData = (loanId:string,pagination:{page: number,size:number},columnF
     id: string;
 }[]) => {
     const data = backendData.get(loanId);
-    console.log(data?.rows.length)
+
     let transactions =data?.rows || [];
 
     /**
@@ -78,6 +78,7 @@ const getMockData = (loanId:string,pagination:{page: number,size:number},columnF
         });
     }
     const closingBalance = transactions.length > 0 ? transactions[transactions.length -1].closingBalance : 0;
+    const totalRows = transactions.length;
 
     // Apply column filters
     if(columnFilters && columnFilters.length > 0){
@@ -106,6 +107,7 @@ const getMockData = (loanId:string,pagination:{page: number,size:number},columnF
         rows: transactions.slice(pagination.page * pagination.size, (pagination.page + 1) * pagination.size),
         totalPages: Math.ceil(transactions.length / pagination.size)-1,
         closingBalance: closingBalance,
+        totalRows: totalRows
     }
 
     return response
@@ -119,37 +121,7 @@ const getMockTotalPages = (id:string,pagination:{pageIndex: number,pageSize:numb
     return Math.floor(data.rows.length / pagination.pageSize);
 }
 
-const addMockDataTx = (loanId:string,isNow:boolean = false) => {
-    const data = backendData.get(loanId);
-    if(!data){
-        let data = generateMockTransactions(1)
-        const tx = {closingBalance: data.length > 0 ? data[data.length-1].closingBalance : 0, rows: data}
-        backendData.set(loanId,tx);
-        return tx
-    }
 
-    let newTx = generateMockTransaction(data.closingBalance,isNow);
-    newTx.closingBalance = data.closingBalance + (newTx.credit || 0) - (newTx.debit || 0);
-    data.rows.push(newTx);
-    data.closingBalance = newTx.closingBalance;
-    backendData.set(loanId,data);
 
-    return {
-        closingBalance: data.closingBalance,
-        rows: [newTx]
-    };
-}
-
-const deleteMockDataTx = (loanId:string) => {
-    const data = backendData.get(loanId);
-    if(!data || data.rows.length === 0){
-        return backendData.get(loanId);
-    }
-    const removedTx = data.rows.shift()!;
-    data.closingBalance = data.rows.length > 0 ? data.rows[data.rows.length -1].closingBalance : 0;
-    backendData.set(loanId,data);
-    return {data, removedTx};
-}
-
-export { addMockDataTx, backendData, deleteMockDataTx, getAllMockDataMetadata, getMockData, getMockDataMetadata, getMockTotalPages };
+export { backendData, getAllMockDataMetadata, getMockData, getMockDataMetadata, getMockTotalPages };
 

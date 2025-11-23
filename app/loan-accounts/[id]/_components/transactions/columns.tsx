@@ -156,5 +156,4 @@ const columns: ColumnDef<TransactionRow>[] = [
   }
 ]
 
-
 export default columns;

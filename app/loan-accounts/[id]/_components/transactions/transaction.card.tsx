@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card"
+import { Button } from "@/components/primitives/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/primitives/card"
 import { Suspense } from "react"
 import { TransactionsTableSkeleton } from "./transactions.skeleton.table"
 import { TransactionTable } from "./transactions.table.ssr"
@@ -23,5 +24,12 @@ export const LoanTransactionsCard = ({loanId,searchParams}:LoanTransactionsCardP
                 <TransactionTable loanId={loanId} searchParams={searchParams}/>
             </Suspense>
           </CardContent>
+          <CardFooter >
+            <div className="w-full flex gap-4 items-end justify-end">
+                <Button variant={'secondary'} size={'sm'}>Statements</Button>
+                <Button variant={'secondary'} size={'sm'}>Accruals</Button>
+                <Button variant={'secondary'} size={'sm'}>Details</Button>
+            </div>
+          </CardFooter>
         </Card>
 }

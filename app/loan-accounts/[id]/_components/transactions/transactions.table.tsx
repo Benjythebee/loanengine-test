@@ -1,46 +1,47 @@
 "use client";
 import { Button } from "@/components/primitives/button";
+import { Skeleton } from "@/components/primitives/skeleton";
 import { type TransactionRow } from "@/types";
 import {
-    flexRender,
-    getCoreRowModel,
-    getFacetedMinMaxValues,
-    getFacetedRowModel,
-    getFacetedUniqueValues,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
-    type Column,
-    type ColumnFiltersState,
-    type SortingState,
+  flexRender,
+  getCoreRowModel,
+  getFacetedMinMaxValues,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type Column,
+  type ColumnFiltersState,
+  type SortingState,
 } from "@tanstack/react-table";
-import { AlertCircleIcon, LucideChevronLeft, LucideChevronRight, LucideChevronsLeft, LucideChevronsRight, LucideLoader2, SearchIcon } from "lucide-react";
+import { AlertCircleIcon, LucideChevronLeft, LucideChevronRight, LucideChevronsLeft, LucideChevronsRight, SearchIcon } from "lucide-react";
 import { useId, useMemo } from "react";
 import { Input } from "../../../../../components/primitives/input";
 import { Label } from "../../../../../components/primitives/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "../../../../../components/primitives/select";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "../../../../../components/primitives/table";
-import { AddTXDialog } from "./add-dialog/dialog";
+import { AddTXDialog } from "./add-dialog/add-dialog";
 import columns from "./columns";
 import { RefreshButton } from "./refresh-button";
 
 export interface TransactionsTableProps {
   data: TransactionRow[];
-  totalPages: number;
+  totalRows?: number;
   pagination: { pageIndex: number; pageSize: number };
   onPaginationChange: (updater: any) => void;
   sorting: SortingState;
@@ -58,7 +59,7 @@ export interface TransactionsTableProps {
 
 function TransactionsTable({
   data = [],
-  totalPages = 1,
+  totalRows = 10,
   pagination,
   onPaginationChange,
   sorting,
@@ -73,10 +74,13 @@ function TransactionsTable({
   newElementsCount = 0,
   clientSideInteractions = false,
 }: TransactionsTableProps) {
+
+
   const table = useReactTable({
     data,
     columns,
-    pageCount: totalPages,
+    // pageCount: totalPages,
+    rowCount:totalRows,
     state: {
       sorting,
       columnFilters,
@@ -121,7 +125,7 @@ function TransactionsTable({
             </div>
           </div>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-4 md:gap-2 items-stretch md:items-center flex-col-reverse md:flex-row ">
             <RefreshButton 
               indicator={newElementsCount} 
               onClick={onRefresh || (() => {})} 
@@ -133,11 +137,11 @@ function TransactionsTable({
         </div>
 
         <div className="relative">
-          {isLoading && table.getRowModel().rows?.length === 0 && (
+          {/* {isLoading && table.getRowModel().rows?.length === 0 && (
             <div className="absolute inset-0 z-10 flex items-center justify-center">
               <div className="animate-spin"><LucideLoader2 /></div>
             </div>
-          )}
+          )} */}
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -181,7 +185,11 @@ function TransactionsTable({
                   {table.getRowModel().rows.length < pagination.pageSize && (
                     [...Array(pagination.pageSize - table.getRowModel().rows.length)].map((_, index) => (
                       <TableRow key={`empty-${index}`} className="h-10">
-                        <TableCell colSpan={columns.length}>&nbsp;</TableCell>
+                        <TableCell colSpan={columns.length}>
+                          {isFetching||isLoading ? (
+                            <Skeleton className="h-6 w-full" />
+                          ) : <>&nbsp;</>}
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -202,7 +210,11 @@ function TransactionsTable({
                 table.getRowModel().rows.length < pagination.pageSize && (
                   [...Array(pagination.pageSize - table.getRowModel().rows.length)].map((_, index) => (
                     <TableRow key={`empty-${index}`} className="h-10 border-0">
-                      <TableCell colSpan={columns.length}>&nbsp;</TableCell>
+                      <TableCell colSpan={columns.length}>
+                        {isFetching||isLoading ? (
+                            <Skeleton className="h-6 w-full" />
+                          ) : <>&nbsp;</>}
+                      </TableCell>
                     </TableRow>
                   ))
                 )
@@ -239,9 +251,9 @@ function TransactionsTable({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex w-fit items-center justify-center text-sm font-medium">
+              <div className="flex w-fit items-center justify-center text-sm font-medium">                
                 Page {table.getState().pagination.pageIndex + 1} of{" "}
-                {table.getPageCount()}
+                {table.getPageCount()<table.getState().pagination.pageIndex + 1 ? table.getState().pagination.pageIndex + 1: table.getPageCount()}
               </div>
               <div className="ml-auto flex items-center gap-2 lg:ml-0">
                 <Button

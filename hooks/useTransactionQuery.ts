@@ -4,15 +4,19 @@ import { getMockData, getMockDataMetadata } from "@/mock/data";
 import { TransactionRow } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
+import { useSearchParams } from "next/navigation";
 
 export type TransactionQueryData = {
   rows: TransactionRow[];
   closingBalance: number;
   totalPages: number;
+  totalRows: number;
 }
 
 export function useTransactionsData(loanId: string,initalData?: TransactionQueryData,  pagination:{pageIndex:number;pageSize:number}={pageIndex:0,pageSize:10},columnFilters:ColumnFiltersState=[],sorting:SortingState=[]) {
 
+  const searchParams = useSearchParams();
+  const delay = isNaN(Number(searchParams.get('delay')))?  '1000' : searchParams.get('delay') || '1000';
   // Base query: initial state
   const query = useQuery({
     queryKey: ['transactions',
@@ -44,7 +48,7 @@ export function useTransactionsData(loanId: string,initalData?: TransactionQuery
     refetchOnWindowFocus: false,
     queryFn: async () => {
       // Simulate network delay
-      await sleep(3000); 
+      await sleep(Number(delay)); 
 
       const requestedDate = getMockData(loanId, {
         page: pagination.pageIndex,
@@ -53,8 +57,9 @@ export function useTransactionsData(loanId: string,initalData?: TransactionQuery
       columnFilters,
       sorting
     );
-      return {rows: requestedDate.rows, closingBalance: requestedDate.closingBalance, totalPages: requestedDate.totalPages};
-    }, // initial placeholder
+      return {rows: requestedDate.rows, closingBalance: requestedDate.closingBalance, totalPages: requestedDate.totalPages,totalRows: requestedDate.totalRows};
+    },
+     // initial placeholder
     // initialData: {
     //   rows: initalData?.rows || [],
     //   closingBalance: initalData?.closingBalance || 0,
@@ -62,7 +67,7 @@ export function useTransactionsData(loanId: string,initalData?: TransactionQuery
     // } 
     
   });
-
+  
 
   return query
 }

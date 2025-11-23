@@ -28,9 +28,9 @@ const meta: Meta<typeof TransactionsTable> = {
       control: 'object',
       description: 'Array of transaction data to display',
     },
-    totalPages: {
+    totalRows: {
       control: { type: 'number', min: 1, max: 100 },
-      description: 'Total number of pages available',
+      description: 'Total number of rows available',
     },
     pagination: {
       control: 'object',
@@ -58,6 +58,7 @@ const meta: Meta<typeof TransactionsTable> = {
     },
   },
   args: {
+    totalRows: mockData.length,
     // Default props with mock functions
     onPaginationChange: () => {},
     onSortingChange: () => {},
@@ -73,7 +74,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     data: mockData.slice(0, 10),
-    totalPages: 3,
+    totalRows: mockData.length,
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [],
@@ -97,7 +98,7 @@ export const Default: Story = {
 export const Loading: Story = {
   args: {
     data: [],
-    totalPages: 1,
+    totalRows: mockData.length,
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [],
@@ -120,7 +121,7 @@ export const Loading: Story = {
 export const Fetching: Story = {
   args: {
     data: mockData.slice(0, 10),
-    totalPages: 3,
+    totalRows: mockData.length,
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [],
@@ -143,7 +144,7 @@ export const Fetching: Story = {
 export const WithError: Story = {
   args: {
     data: [],
-    totalPages: 1,
+    totalRows: 0,
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [],
@@ -166,7 +167,7 @@ export const WithError: Story = {
 export const Empty: Story = {
   args: {
     data: [],
-    totalPages: 1,
+    totalRows: 0,
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [],
@@ -189,7 +190,7 @@ export const Empty: Story = {
 export const WithFilters: Story = {
   args: {
     data: mockData.filter(t => t.type === 'PAYMENT').slice(0, 10),
-    totalPages: 2,
+    totalRows: mockData.filter(t => t.type === 'PAYMENT').length,
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [
@@ -215,7 +216,7 @@ export const WithFilters: Story = {
 export const WithNewElements: Story = {
   args: {
     data: mockData.slice(0, 10),
-    totalPages: 3,
+    totalRows: mockData.length,
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [],
@@ -238,7 +239,7 @@ export const WithNewElements: Story = {
 export const LargeDataset: Story = {
   args: {
     data: mockData.slice(40, 60), // Show page 3 of data
-    totalPages: 15,
+    totalRows: mockData.length,
     pagination: { pageIndex: 2, pageSize: 20 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [],
@@ -261,7 +262,7 @@ export const LargeDataset: Story = {
 export const InteractiveDemo: Story = {
   args: {
     data: mockData.slice(0, 10),
-    totalPages: 3,
+    totalRows: mockData.length,
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [{ id: "transactionDate", desc: true }],
     columnFilters: [],
