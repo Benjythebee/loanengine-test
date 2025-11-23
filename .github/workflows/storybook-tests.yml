@@ -7,7 +7,10 @@ on:
 jobs:
   test-storybook:
     runs-on: ubuntu-latest
-
+    container:
+        # Make sure to grab the latest version of the Playwright image
+        # https://playwright.dev/docs/docker#pull-the-image
+        image: mcr.microsoft.com/playwright:v1.52.0-noble
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,9 +36,6 @@ jobs:
 
       # - name: Build Storybook
       #   run: pnpm run build-storybook
-
-      - name: Install chromium for Playwright
-        run: pnpm exec playwright install 
 
       - name: Run Storybook tests
         run: pnpm run test
