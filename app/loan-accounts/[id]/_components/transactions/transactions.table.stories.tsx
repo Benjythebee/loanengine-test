@@ -1,94 +1,70 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitives/card";
 import { generateMockTransactions } from "@/lib/transactions-helper";
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Suspense } from 'react';
-import { expect, within } from 'storybook/test';
-import { TransactionsTableSkeleton } from "./transactions.skeleton.table";
-import { TransactionsDataTable } from "./transactions.table.client";
-// import { TableRowClientClickable } from "./list.loans.row.client";
+import { LoanIDProvider } from "../../id-provider";
+import { TransactionsTable } from "./transactions.table";
 
 // Mock data for stories
-const mockData = generateMockTransactions(20)
+const mockData = generateMockTransactions(25);
 
-// Since the original component is async/server-side, we need client-compatible versions for Storybook
-const TransactionsTableClient = ({ loanId='LOAN_01',hasData=true, page=0,pageSize=10, enableLiveDataOnMount=false,isLoading = false, error=null}:{loanId: string, hasData: boolean, isLoading?: boolean, error?: string | null, page?:number,pageSize?:number, enableLiveDataOnMount?: boolean}) => {
-    
-
-    const pageNumber = page || 0;
-    const sizeNumber = pageSize || 10;
-
-    const data = hasData ? {
-        rows: mockData.slice(pageNumber * sizeNumber, (pageNumber + 1) * sizeNumber),
-        totalPages: hasData?Math.ceil(mockData.length / sizeNumber):0,
-        closingBalance: mockData[mockData.length -1].closingBalance,
-    } : {
-        rows: [],
-        totalPages: 0,
-        closingBalance: 0
-    };
-
-    return<Card className='grid grid-cols-1'>
-          <CardHeader>
-           <CardTitle>Transactions</CardTitle>
-          </CardHeader>
-          <CardContent className='ps-2 relative'>
-            {isLoading && <TransactionsTableSkeleton filterCount={3} headerCount={7} rowCount={3} />}
-            {!isLoading && (<TransactionsDataTable
-                    loanId={loanId}
-                    initialData={data} 
-                    enableLiveDataOnMount={enableLiveDataOnMount}
-                    error={error||undefined}
-                    totalPages={data?.totalPages || 0}
-                    pagination={{ pageIndex: pageNumber, pageSize: sizeNumber }}
-                        />)}
-          </CardContent>
-        </Card>
-    
-    return 
-
+const TableWithProviders = (args: React.ComponentProps<typeof TransactionsTable>) => {
+  return <LoanIDProvider loanID="LOAN_01"><TransactionsTable {...args} /></LoanIDProvider>
 }
 
-
-
-const meta: Meta<typeof TransactionsTableClient> = {
+// === PRESENTATIONAL COMPONENT STORIES ===
+const meta: Meta<typeof TransactionsTable> = {
   title: 'UI/Transactions Table',
-  component: TransactionsTableClient,
+  component: TableWithProviders,
   parameters: {
     layout: 'padded',
     docs: {
       description: {
-        component: 'A table component that displays a list of transactions with their details including transaction ID, amount, date, and type. Features clickable rows that navigate to individual transaction details.',
+        component: 'A presentational table component that displays transaction data. This is the pure component without data fetching logic, making it perfect for Storybook demonstrations and testing different states.',
       },
     },
   },
   tags: ['autodocs'],
   argTypes: {
-    hasData: {
-      control: 'boolean',
-      description: 'Whether the table has transaction data to display',
+    data: {
+      control: 'object',
+      description: 'Array of transaction data to display',
+    },
+    totalPages: {
+      control: { type: 'number', min: 1, max: 100 },
+      description: 'Total number of pages available',
+    },
+    pagination: {
+      control: 'object',
+      description: 'Current pagination state',
     },
     isLoading: {
       control: 'boolean',
-      description: 'Whether the component is in loading state',
+      description: 'Whether the table is in loading state',
+    },
+    isFetching: {
+      control: 'boolean',
+      description: 'Whether the table is fetching new data',
     },
     error: {
       control: 'text',
-      description: 'Error message to display in the table, for example when data fetching fails',
+      description: 'Error message to display',
     },
-    page: {
-      control: 'number',
-      description: 'Current page index for pagination',
+    newElementsCount: {
+      control: { type: 'number', min: 0, max: 50 },
+      description: 'Number of new elements available for refresh',
     },
-    pageSize: {
-      control: 'number',
-      description: 'Number of items per page for pagination',
-    },
-    enableLiveDataOnMount:{
+    refreshDisabled: {
       control: 'boolean',
-      description: 'Whether to enable live data updates when the component mounts (simulated)',
-    }
+      description: 'Whether the refresh button is disabled',
+    },
   },
-}  satisfies Meta<typeof TransactionsTableClient>;
+  args: {
+    // Default props with mock functions
+    onPaginationChange: () => {},
+    onSortingChange: () => {},
+    onColumnFiltersChange: () => {},
+    onRefresh: () => {},
+  },
+} satisfies Meta<typeof TransactionsTable>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -96,86 +72,210 @@ type Story = StoryObj<typeof meta>;
 // Default state with sample data
 export const Default: Story = {
   args: {
-    hasData: true,
+    data: mockData.slice(0, 10),
+    totalPages: 3,
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [],
     isLoading: false,
-    error: null,
-    enableLiveDataOnMount:true,
-    page: 0,
-    pageSize: 10
+    isFetching: false,
+    error: undefined,
+    newElementsCount: 0,
+    refreshDisabled: false,
+    clientSideInteractions: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Default table state with transaction data and standard pagination.',
+      },
+    },
   },
 };
 
 // Loading state
 export const Loading: Story = {
   args: {
-    hasData: false,
+    data: [],
+    totalPages: 1,
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [],
     isLoading: true,
-    enableLiveDataOnMount:false,
+    isFetching: false,
+    error: undefined,
+    newElementsCount: 0,
+    refreshDisabled: true,
   },
   parameters: {
     docs: {
       description: {
-        story: 'Shows the skeleton loading state while data is being fetched.',
+        story: 'Shows the loading spinner when no data is present and isLoading is true.',
       },
     },
   },
 };
 
-export const Errored: Story = {
+// Fetching state (data exists but new data is being fetched)
+export const Fetching: Story = {
   args: {
-    hasData: false,
-    enableLiveDataOnMount:false,
-    error: "Something went wrong: could not retrieve transaction data. Please try again."
+    data: mockData.slice(0, 10),
+    totalPages: 3,
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [],
+    isLoading: false,
+    isFetching: true,
+    error: undefined,
+    newElementsCount: 0,
+    refreshDisabled: false,
   },
-  play: async (
-    {
-      canvasElement,
-    }
-  ) => {
-    const canvas = within(canvasElement);
-
-    const errorText = canvas.getByText("Something went wrong:",{
-        exact: false
-    });
-
-    await expect(errorText).toBeInTheDocument();
-  }
+  parameters: {
+    docs: {
+      description: {
+        story: 'Shows the table with data while new data is being fetched (refresh button shows loading state).',
+      },
+    },
+  },
 };
-// Empty state
+
+// Error state
+export const WithError: Story = {
+  args: {
+    data: [],
+    totalPages: 1,
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [],
+    isLoading: false,
+    isFetching: false,
+    error: "Failed to load transaction data. Please check your connection and try again.",
+    newElementsCount: 0,
+    refreshDisabled: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Shows error state when data fetching fails.',
+      },
+    },
+  },
+};
+
+// Empty state (no error, no loading, just no data)
 export const Empty: Story = {
   args: {
-    hasData: false,
+    data: [],
+    totalPages: 1,
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [],
     isLoading: false,
-    enableLiveDataOnMount:false,
+    isFetching: false,
+    error: undefined,
+    newElementsCount: 0,
+    refreshDisabled: false,
   },
   parameters: {
     docs: {
       description: {
-        story: 'Shows the table when no transaction data is available.',
+        story: 'Shows empty table state when no data is available.',
       },
     },
   },
 };
 
-
-// Comprehensive demo with suspense simulation
-export const WithSuspenseDemo: Story = {
-  render: () => {
-    const LoadingDemo = () => (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Loading State (with Suspense)</h3>
-        <Suspense fallback={<TransactionsTableSkeleton filterCount={3} headerCount={7} rowCount={3} />}>
-          <TransactionsTableClient loanId="LOAN_01" hasData={true} isLoading={false} />
-        </Suspense>
-      </div>
-    );
-    
-    return <LoadingDemo />;
+// With filters applied
+export const WithFilters: Story = {
+  args: {
+    data: mockData.filter(t => t.type === 'PAYMENT').slice(0, 10),
+    totalPages: 2,
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [
+      { id: "type", value: "PAYMENT" },
+      { id: "status", value: "CLEARED" }
+    ],
+    isLoading: false,
+    isFetching: false,
+    error: undefined,
+    newElementsCount: 0,
+    refreshDisabled: false,
   },
   parameters: {
     docs: {
       description: {
-        story: 'Demonstrates how the component works with React Suspense, showing the skeleton fallback before rendering the actual data.',
+        story: 'Shows table with active filters applied to demonstrate filtered state.',
+      },
+    },
+  },
+};
+
+// With new elements available for refresh
+export const WithNewElements: Story = {
+  args: {
+    data: mockData.slice(0, 10),
+    totalPages: 3,
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [],
+    isLoading: false,
+    isFetching: false,
+    error: undefined,
+    newElementsCount: 5,
+    refreshDisabled: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Shows table with new elements indicator on refresh button.',
+      },
+    },
+  },
+};
+
+// Large dataset with pagination
+export const LargeDataset: Story = {
+  args: {
+    data: mockData.slice(40, 60), // Show page 3 of data
+    totalPages: 15,
+    pagination: { pageIndex: 2, pageSize: 20 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [],
+    isLoading: false,
+    isFetching: false,
+    error: undefined,
+    newElementsCount: 0,
+    refreshDisabled: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstrates pagination with a large dataset and different page size.',
+      },
+    },
+  },
+};
+
+// Interactive demo showcasing various states
+export const InteractiveDemo: Story = {
+  args: {
+    data: mockData.slice(0, 10),
+    totalPages: 3,
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [{ id: "transactionDate", desc: true }],
+    columnFilters: [],
+    isLoading: false,
+    isFetching: false,
+    error: undefined,
+    newElementsCount: 0,
+    refreshDisabled: false,
+    clientSideInteractions: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Interactive demo where you can modify all props to see how the table responds to different states and configurations.',
       },
     },
   },

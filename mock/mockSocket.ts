@@ -1,5 +1,5 @@
 import { generateMockTransaction, generateMockTransactions } from "@/lib/transactions-helper";
-import { EventEmitter } from "events";
+import EventEmitter from 'eventemitter3'; // 👈
 import { backendData } from "./data";
 
 export default class MockSocket extends EventEmitter {
@@ -53,7 +53,7 @@ export default class MockSocket extends EventEmitter {
             }
           }
       })
-    },1200)
+    },5000)
   
   }
   

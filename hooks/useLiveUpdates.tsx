@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 export const useLiveUpdates = (loanId:string,columnFilters: ColumnFiltersState,dataUpdatedAt:number) => {
 
     const [newElements, setNewElements] = useState(0);
-
-  const {latestTransaction} = useTransactionWebSocket({loanId,filterTypes:columnFilters.map((filter) => `${filter.value}`)});
+  const filters = columnFilters.map((filter) => `${filter.value}`)
+  const {latestTransaction} = useTransactionWebSocket({loanId,filterTypes:filters.length > 0 ? filters : undefined});
 
   useEffect(() => {
     if(latestTransaction){

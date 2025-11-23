@@ -23,7 +23,24 @@ export function useTransactionsData(loanId: string,initalData?: TransactionQuery
       ...sorting.map((sort) => `${sort.id}-${sort.desc}`)
     ],
     refetchOnMount: false,
-    placeholderData: (prev)=>prev,
+    placeholderData: (prev, query) => {
+      const q =query as any;
+      if(!prev){
+        return undefined;
+      }
+      if(!query){
+        return undefined;
+      }
+      // Keep previous data unless page index changed
+      const prevPageIndex = q.state.data ? q.queryKey[2] : null;
+      const currentPageIndex = pagination.pageIndex;
+
+      if (prevPageIndex !== null && prevPageIndex !== currentPageIndex) {
+        return undefined; // Allow fresh fetch for page changes
+      }
+      
+      return prev; // Keep previous data for filters/sorting changes
+    },
     refetchOnWindowFocus: false,
     queryFn: async () => {
       // Simulate network delay

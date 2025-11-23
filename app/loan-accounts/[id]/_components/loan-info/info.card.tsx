@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/primitives/card";
+import { Separator } from "@/components/primitives/separator";
 import { Skeleton } from "@/components/primitives/skeleton";
 import { Suspense } from "react";
 import { LoanInfoCardContent } from "./info.card.content";
@@ -12,7 +13,9 @@ export const LoanInfoCard = ({ loanId }: { loanId: string }) => {
   return (
     <Card className="grid grid-cols-1 my-2">
       <CardHeader>
-        <CardTitle>Loan Info</CardTitle>
+        <CardTitle>Loan Info
+          <Separator className="mt-2" />
+        </CardTitle>
       </CardHeader>
       <CardContent className="ps-2">
         <Suspense fallback={<ContentSkeleton />}>

@@ -1,10 +1,4 @@
 "use client";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/primitives/card";
 import { useLoanBasicInformation } from "@/hooks/useTransactionQuery";
 import { useMemo } from "react";
 
@@ -16,11 +10,6 @@ export const LoanInfoCardContent = ({ loanId }: { loanId: string }) => {
   }, [data]);
 
   return (
-    <Card className="grid grid-cols-1 my-2">
-      <CardHeader>
-        <CardTitle>Loan Info</CardTitle>
-      </CardHeader>
-      <CardContent className="ps-2">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 ">
           <div className="flex flex-col gap-2">
             {processed.slice(0,6).map((item) => (
@@ -49,7 +38,5 @@ export const LoanInfoCardContent = ({ loanId }: { loanId: string }) => {
             ))}
           </div>
         </div>
-      </CardContent>
-    </Card>
   );
 };
