@@ -75,7 +75,7 @@ function TransactionsTable({
   clientSideInteractions = false,
 }: TransactionsTableProps) {
 
-
+  // console.log('table',data.map((d)=>d.id))
   const table = useReactTable({
     data,
     columns,

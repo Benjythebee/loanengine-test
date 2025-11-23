@@ -1,4 +1,3 @@
-'use client'
 import { sleep } from "@/lib/utils";
 import { getMockData, getMockDataMetadata } from "@/mock/data";
 import { TransactionRow } from "@/types";
@@ -13,19 +12,15 @@ export type TransactionQueryData = {
   totalRows: number;
 }
 
-export function useTransactionsData(loanId: string,initalData?: TransactionQueryData,  pagination:{pageIndex:number;pageSize:number}={pageIndex:0,pageSize:10},columnFilters:ColumnFiltersState=[],sorting:SortingState=[]) {
+export function useTransactionsData(loanId: string,initalData?: TransactionQueryData, key:(number|string)[]=['transactions'],pagination:{pageIndex:number;pageSize:number}={pageIndex:0,pageSize:10},columnFilters:ColumnFiltersState=[],sorting:SortingState=[]) {
 
   const searchParams = useSearchParams();
   const delay = isNaN(Number(searchParams.get('delay')))?  '1000' : searchParams.get('delay') || '1000';
+  const testError = searchParams.get('testError');
   // Base query: initial state
+  // console.log("using key:",key)
   const query = useQuery({
-    queryKey: ['transactions',
-      loanId, 
-      pagination.pageIndex,
-      pagination.pageSize,
-      ...columnFilters.map((filter) => `${filter.id}-${filter.value}`),
-      ...sorting.map((sort) => `${sort.id}-${sort.desc}`)
-    ],
+    queryKey: key,
     refetchOnMount: false,
     placeholderData: (prev, query) => {
       const q =query as any;
@@ -46,10 +41,15 @@ export function useTransactionsData(loanId: string,initalData?: TransactionQuery
       return prev; // Keep previous data for filters/sorting changes
     },
     refetchOnWindowFocus: false,
+    retry: 1,
     queryFn: async () => {
       // Simulate network delay
       await sleep(Number(delay)); 
 
+      if(testError){
+        throw new Error('Simulated network error for testing purposes.');
+      }
+      
       const requestedDate = getMockData(loanId, {
         page: pagination.pageIndex,
         size: pagination.pageSize,

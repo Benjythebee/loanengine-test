@@ -248,29 +248,6 @@ export const WithNewElements: Story = {
   },
 };
 
-// Large dataset with pagination
-export const LargeDataset: Story = {
-  args: {
-    data: mockData.slice(40, 60), // Show page 3 of data
-    totalRows: mockData.length,
-    pagination: { pageIndex: 2, pageSize: 20 },
-    sorting: [{ id: "transactionDate", desc: true }],
-    columnFilters: [],
-    isLoading: false,
-    isFetching: false,
-    error: undefined,
-    newElementsCount: 0,
-    refreshDisabled: false,
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Demonstrates pagination with a large dataset and different page size.',
-      },
-    },
-  },
-};
-
 // Interactive demo showcasing various states
 export const InteractiveDemo: Story = {
   args: {

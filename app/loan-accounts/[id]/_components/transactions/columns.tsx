@@ -120,7 +120,7 @@ const columns: ColumnDef<TransactionRow>[] = [
   },{
     header: 'Description',
     accessorKey: 'description',
-    cell: ({ row }) => <div>{row.getValue('description')}</div>,
+    cell: ({ row }) => <div className='truncate max-w-[150px] sm:max-w-sm'>{row.getValue('description')}</div>,
     enableSorting: false,
     meta: {
       filterVariant: 'text'

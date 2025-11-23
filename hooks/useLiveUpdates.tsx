@@ -1,25 +1,60 @@
-import { useTransactionWebSocket } from "@/hooks/useWebSocket";
+import { useTransactionWebSocket, useWebSocket } from "@/hooks/useWebSocket";
+import { useQueryClient } from "@tanstack/react-query";
 import { ColumnFiltersState } from "@tanstack/react-table";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useShallow } from "zustand/shallow";
+import { TransactionQueryData } from "./useTransactionQuery";
 
 
-export const useLiveUpdates = (loanId:string,columnFilters: ColumnFiltersState,dataUpdatedAt:number) => {
+export const useLiveUpdates = (loanId:string,columnFilters: ColumnFiltersState,queryKey:(string|number)[]) => {
+  const queryClient = useQueryClient();
+  const [newElements, setNewElements] = useState(0);
+  const {latestTransaction} = useTransactionWebSocket({loanId,columnFilters:columnFilters.length > 0 ? columnFilters : undefined});
+  const {onUpdate, removeOnUpdate} = useWebSocket(useShallow((state)=>({ onUpdate: state.onUpdate, removeOnUpdate: state.removeOnUpdate })));
 
-    const [newElements, setNewElements] = useState(0);
-  const filters = columnFilters.map((filter) => `${filter.value}`)
-  const {latestTransaction} = useTransactionWebSocket({loanId,filterTypes:filters.length > 0 ? filters : undefined});
+  useEffect(() => {
+    const callbackKey = onUpdate((tx)=>{
+      queryClient.setQueryData(queryKey, (oldData: TransactionQueryData) => {
+        if(!oldData) return oldData;
+        const newRows = oldData.rows.map((row) => {
+          if(row.id === tx.id){
+            return { ...row, ...tx };
+          }
+          return row;
+        });
+        return {
+          ...oldData,
+          rows: newRows
+        };
+      })
+    })
+    return () => {
+      removeOnUpdate(callbackKey)
+    }
+  },[queryKey])
+
 
   useEffect(() => {
     if(latestTransaction){
       setNewElements((count) => count + 1);
     }
   }, [latestTransaction]);
+  // console.log('useLiveUpdates newElements count:', dataUpdatedAt);
+
+
+  const refresh = useCallback(() => {
+    if(newElements > 0) {
+      queryClient.invalidateQueries({queryKey,refetchType:'all'});
+      setNewElements(0);
+    }
+  }, [newElements, queryClient, queryKey]);
 
   useEffect(() => {
+    // On queryKey change, reset newElements count
     setNewElements(0);
-  },[dataUpdatedAt])
+  }, [queryKey]);
 
 
-    return { newElements};
+    return { newElements, refresh};
     
 }

@@ -3,7 +3,7 @@
 import { SidebarProvider } from "@/context/sidebar-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
-import { useRef } from "react";
+import { useState } from "react";
 
 interface ProvidersProps {
   /**
@@ -14,18 +14,18 @@ interface ProvidersProps {
 
 export const Providers = (props: React.PropsWithChildren<ProvidersProps>) => {
   const { defaultOpen, children } = props;
-  const queryClient = useRef(new QueryClient());
-  // // Create a new QueryClient instance for each component instance
-  // // This prevents SSR/hydration mismatches
-  // const [queryClient] = useState(() => new QueryClient({
-  //   defaultOptions: {
-  //     queries: {
-  //       // With SSR, we usually want to set some default staleTime
-  //       // above 0 to avoid refetching immediately on the client
-  //       staleTime: 60 * 1000,
-  //     },
-  //   },
-  // }));
+  
+  // Create a new QueryClient instance for each component instance
+  // This prevents SSR/hydration mismatches
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        // With SSR, we usually want to set some default staleTime
+        // above 0 to avoid refetching immediately on the client
+        staleTime: 60 * 1000,
+      },
+    },
+  }));
 
   return (
     <ThemeProvider
@@ -35,7 +35,7 @@ export const Providers = (props: React.PropsWithChildren<ProvidersProps>) => {
       enableColorScheme
       enableSystem
     >
-      <QueryClientProvider client={queryClient.current}>
+      <QueryClientProvider client={queryClient} >
         <SidebarProvider defaultOpen={defaultOpen}>
           {children}
         </SidebarProvider>

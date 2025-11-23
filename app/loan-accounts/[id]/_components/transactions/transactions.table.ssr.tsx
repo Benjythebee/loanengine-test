@@ -1,6 +1,6 @@
-import { TransactionsDataTable } from "@/app/loan-accounts/[id]/_components/transactions/transactions.table.client";
 import { sleep } from "@/lib/utils";
 import { getMockData } from "@/mock/data";
+import { TransactionsClientWrapper } from "./transactions.client-wrapper";
 
 const getData = async (loanId:string, pagination:{page:number, size:number}) => {
     // Simulate network delay
@@ -25,7 +25,7 @@ export const TransactionTable = async ({loanId,searchParams}:{loanId:string, sea
         size: pageSize
     });
 
-    return <TransactionsDataTable
+    return <TransactionsClientWrapper
         loanId={loanId}
         initialData={withFakeSSRData?data:undefined} 
         pagination={{pageIndex, pageSize}}

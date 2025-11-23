@@ -56,7 +56,7 @@ export function generateMockTransaction(max: number = 1000000, isNow?: boolean):
       transactionDate: isNow ? now() : randomDate(),
       valueDate: isNow ? now() : randomDate(),
       type,
-      status: "CLEARED" as Status,
+      status: Math.random() < 0.7 ? "PENDING" as Status : "CLEARED" as Status,
       description: transactionDescriptions[type](),
       debit,
       credit,

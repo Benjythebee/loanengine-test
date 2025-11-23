@@ -1,6 +1,7 @@
 'use client'
 import MockSocket from '@/mock/mockSocket';
 import { TransactionRow } from '@/types';
+import { ColumnFiltersState } from '@tanstack/react-table';
 import { useEffect } from 'react';
 import { create } from 'zustand';
 
@@ -8,9 +9,12 @@ interface WebSocketState {
   isConnected: boolean;
   latestTransaction: TransactionRow | null;
   socket: MockSocket | null;
-  subscribe: (loanId: string, filterTypes?: string[]) => void;
+  subscribe: (loanId: string, columnFilters?: ColumnFiltersState) => void;
   unsubscribe: () => void;
   getSocket: () => MockSocket;
+  onUpdateCallbacks: Map<string, (tx: TransactionRow) => void>;
+  onUpdate: (callback: (tx: TransactionRow) => void) => string;
+  removeOnUpdate: (key: string) => void;
 }
 
 export const useWebSocket = create<WebSocketState>()((set, get) => ({
@@ -25,7 +29,20 @@ export const useWebSocket = create<WebSocketState>()((set, get) => ({
         }
         return socket;
     },
-    subscribe: (loanId: string, filterTypes?: string[]) => {
+    onUpdateCallbacks: new Map(),
+    onUpdate: (callback: (tx: TransactionRow) => void) => {
+      const callbacks = get().onUpdateCallbacks;
+      const callbackKey = Date.now().toString()
+      callbacks.set(Date.now().toString(), callback);
+      set({ onUpdateCallbacks: callbacks });
+      return callbackKey
+    },
+    removeOnUpdate: (key: string) => {
+      const callbacks = get().onUpdateCallbacks;
+      callbacks.delete(key);
+      set({ onUpdateCallbacks: callbacks });
+    },
+    subscribe: (loanId: string, columnFilters?: ColumnFiltersState) => {
       const socket = get().getSocket();
       
       // Clean up existing socket if any
@@ -34,13 +51,18 @@ export const useWebSocket = create<WebSocketState>()((set, get) => ({
         socket.removeAllListeners();
       }
       // Set up message listener for new transactions
-      socket.on('message', (transaction: TransactionRow) => {
+      socket.on('latestTx', (transaction: TransactionRow) => {
         // console.log('WebSocket received new transaction:', transaction);
         set({ latestTransaction: transaction });
       });
 
+      socket.on('update', (transaction: TransactionRow) => {
+        // console.log('WebSocket received new transaction:', transaction);
+        get().onUpdateCallbacks.forEach(cb => cb(transaction));
+      });
+
       // Subscribe to the loan
-      socket.subscribe(loanId, filterTypes);
+      socket.subscribe(loanId, columnFilters);
 
       set({ 
         isConnected: true,
@@ -54,9 +76,10 @@ export const useWebSocket = create<WebSocketState>()((set, get) => ({
         socket.unsubscribe();
         socket.removeAllListeners();
       }
+
+      console.log('WebSocket unsubscribed');
       
       set({ 
-        socket: null, 
         isConnected: false, 
         latestTransaction: null 
       });
@@ -64,20 +87,18 @@ export const useWebSocket = create<WebSocketState>()((set, get) => ({
 }))
 
 // Custom hook for easier usage - only returns what's needed
-export const useTransactionWebSocket = ({loanId, filterTypes}: {loanId: string, filterTypes?: string[]}) => {
+export const useTransactionWebSocket = ({loanId, columnFilters}: {loanId: string, columnFilters?: ColumnFiltersState}) => {
   const { isConnected, latestTransaction, subscribe, unsubscribe } = useWebSocket();
   
     useEffect(() => {
         if(loanId){
-            subscribe(loanId, filterTypes);
+            subscribe(loanId, columnFilters);
         }
-    }, [loanId, filterTypes]);
-
-    useEffect(() => {
         return () => {
             unsubscribe();
         };
-    },[])
+    }, [loanId, columnFilters]);
+
 
   return {
     isConnected,
