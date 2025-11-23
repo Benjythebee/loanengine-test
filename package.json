@@ -14,7 +14,6 @@
     "@chromatic-com/storybook": "^4.1.3",
     "@storybook/addon-a11y": "^10.0.8",
     "@storybook/addon-docs": "^10.0.8",
-    "@storybook/addon-queryparams": "^9.0.1",
     "@storybook/addon-themes": "^10.0.8",
     "@storybook/addon-vitest": "^10.0.8",
     "@storybook/nextjs": "^10.0.8",
