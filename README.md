@@ -2,6 +2,15 @@
 
 A demo ui for a ui test.
 
+See [Getting Started](https://github.com/Benjythebee/loanengine-test?tab=readme-ov-file#getting-started)
+
+Dev server will start on port 3000.
+
+Example page for this test can be found at [/loan-accounts/[id]](http://localhost:3000/loan-accounts/019ab239-9b7a-76de-ba9c-7e1085438642)
+
+Known issues can be found [here](https://github.com/Benjythebee/loanengine-test/issues)
+
+
 ##  Features
 
 - **Loan Account Management** - View and manage loan accounts with detailed information
@@ -87,33 +96,8 @@ pnpm start        # Start production server on port 8080
 ### Component Development
 ```bash
 pnpm storybook         # Start Storybook development server
-pnpm test-storybook    # Run Storybook tests with Vitest
+pnpm test    # Run Storybook tests with Vitest
 ```
-
-##  Component Library
-
-This project includes a comprehensive component library built with shadcn/ui:
-
-### UI Primitives
-- **Button** - Multiple variants (default, outline, ghost, etc.)
-- **Card** - Flexible card components for content display
-- **Input** - Form inputs with validation states
-- **Table** - Data tables with sorting and pagination support
-- **Dialog** - Modal dialogs and overlays
-- **Select** - Dropdown selection components
-- **Badge** - Status indicators and labels
-- **Avatar** - User profile images with fallbacks
-
-### Business Components
-- **Loan List** - Tabular display of loan accounts
-- **Loan Info** - Detailed loan information cards
-- **Transaction Tables** - Financial transaction displays
-- **Navigation** - Sidebar and breadcrumb navigation
-
-### Development Tools
-- **Storybook Integration** - All components documented with interactive examples
-- **Theme Support** - Light/dark mode with system preference detection
-- **Responsive Design** - Mobile-first approach with breakpoint utilities
 
 ##  Configuration
 
@@ -134,7 +118,7 @@ Strict TypeScript configuration with:
 - **Code Splitting** - Automatic code splitting by Next.js
 - **Image Optimization** - Next.js Image component with remote patterns
 
-## 🧪 Testing
+## Testing
 
 The project is configured for comprehensive testing:
 

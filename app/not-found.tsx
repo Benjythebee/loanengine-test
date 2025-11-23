@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export const NotFound = () => {
   return (
-    <main className="items-center justify-center">
+    <main className="w-full h-full flex items-center justify-center">
       <Card className="w-full max-w-md">
         <CardContent className="grid gap-2">
           <h1 className="font-bold text-xl">404 - Page Not Found</h1>
@@ -16,7 +16,7 @@ export const NotFound = () => {
         </CardContent>
 
         <CardFooter className="flex justify-end">
-          <Link href="/dashboard">
+          <Link href="/">
             <Button>Back to Home</Button>
           </Link>
         </CardFooter>
