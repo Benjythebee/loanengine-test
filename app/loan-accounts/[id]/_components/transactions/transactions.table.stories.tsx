@@ -1,5 +1,6 @@
 import { generateMockTransactions } from "@/lib/transactions-helper";
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from "storybook/test";
 import { LoanIDProvider } from "../../id-provider";
 import { TransactionsTable } from "./transactions.table";
 
@@ -150,9 +151,21 @@ export const WithError: Story = {
     columnFilters: [],
     isLoading: false,
     isFetching: false,
-    error: "Failed to load transaction data. Please check your connection and try again.",
+    error: "Failed to load transaction data. Try again in a moment.",
     newElementsCount: 0,
     refreshDisabled: false,
+  },
+  play: async ({ canvasElement }) => {
+
+    const canvas = within(canvasElement);
+    // Check that the error message is displayed
+    const errorMessage = await canvas.findByText(/Failed to load transaction data/i);
+    
+    await expect(errorMessage).toBeInTheDocument();
+
+    const addButton = canvas.getByTestId('add-button')
+    await expect(addButton).toBeDisabled(); 
+
   },
   parameters: {
     docs: {

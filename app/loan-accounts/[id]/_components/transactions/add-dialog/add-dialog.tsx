@@ -36,7 +36,7 @@ export function AddTXDialog(props: AddTXDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen} {...rest}>
       <DialogTrigger asChild>
-        <Button className="cursor-pointer" disabled={disabled}>
+        <Button data-testid="add-button" className="cursor-pointer" disabled={disabled}>
           <LucidePlusCircle /> Add
         </Button>
       </DialogTrigger>

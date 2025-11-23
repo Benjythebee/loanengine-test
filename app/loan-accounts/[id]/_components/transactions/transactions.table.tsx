@@ -132,7 +132,7 @@ function TransactionsTable({
               disabled={refreshDisabled} 
               refreshing={isFetching} 
             />
-            <AddTXDialog disabled={refreshDisabled}/>
+            <AddTXDialog disabled={refreshDisabled || !!error}/>
           </div>
         </div>
 
