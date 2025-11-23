@@ -34,5 +34,8 @@ jobs:
       # - name: Build Storybook
       #   run: pnpm run build-storybook
 
+      - name: Install chromium for Playwright
+        run: pnpm exec playwright install 
+
       - name: Run Storybook tests
         run: pnpm run test
