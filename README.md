@@ -155,6 +155,14 @@ The project is configured for comprehensive testing:
 4. Add/update tests and stories
 5. Submit a pull request
 
+## AI Usage Disclaimer
+
+### General use information
+AI (Github copilot) was mostly used for help with tests and making storybook stories.
+
+### Within the code:
+Usage of AI was limited to small functions and debugging purposes.
+
 ## 📄 License
 
 This project is private and proprietary.
