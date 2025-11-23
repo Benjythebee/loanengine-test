@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start --p 8080",
     "storybook": "storybook dev -p 6006",
-    "test-storybook": "vitest --project=storybook"
+    "test": "vitest --project=storybook"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.3",
