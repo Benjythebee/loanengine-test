@@ -1,9 +1,9 @@
 import { useTransactionWebSocket, useWebSocket } from "@/hooks/useWebSocket";
+import { TransactionQueryData } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import { useCallback, useEffect, useState } from "react";
 import { useShallow } from "zustand/shallow";
-import { TransactionQueryData } from "./useTransactionQuery";
 
 
 export const useLiveUpdates = (loanId:string,columnFilters: ColumnFiltersState,queryKey:(string|number)[]) => {

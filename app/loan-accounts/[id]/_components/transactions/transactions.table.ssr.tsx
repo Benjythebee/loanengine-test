@@ -1,12 +1,17 @@
 import { sleep } from "@/lib/utils";
 import { getMockData } from "@/mock/data";
 import { TransactionsClientWrapper } from "./transactions.client-wrapper";
+import { TransactionQueryData } from "@/types";
 
 const getData = async (loanId:string, pagination:{page:number, size:number}) => {
     // Simulate network delay
     await sleep(1500);
-
-    return getMockData(loanId, pagination,undefined,undefined);
+    try{
+        return getMockData(loanId, pagination,undefined,undefined);
+    }catch (error) {
+        console.error("Error fetching transaction data:", error);
+        return {rows:[], closingBalance:0, totalPages:1, totalRows:0} as TransactionQueryData;
+    }
 }
 
 export const TransactionTable = async ({loanId,searchParams}:{loanId:string, searchParams:{

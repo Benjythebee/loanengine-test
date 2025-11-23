@@ -16,6 +16,13 @@ export interface TransactionRow {
   closingBalance: number;
 }
 
+export type TransactionQueryData={
+  rows: TransactionRow[];
+  closingBalance: number;
+  totalPages: number;
+  totalRows: number;
+}
+
 declare module '@tanstack/react-table' {
     interface ColumnMeta<TData, TValue> {
         filterVariant?: 'range' | 'select' | 'text';

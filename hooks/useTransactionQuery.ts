@@ -1,16 +1,9 @@
 import { sleep } from "@/lib/utils";
 import { getMockData, getMockDataMetadata } from "@/mock/data";
-import { TransactionRow } from "@/types";
+import { TransactionQueryData } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { useSearchParams } from "next/navigation";
-
-export type TransactionQueryData = {
-  rows: TransactionRow[];
-  closingBalance: number;
-  totalPages: number;
-  totalRows: number;
-}
 
 export function useTransactionsData(loanId: string,initalData?: TransactionQueryData, key:(number|string)[]=['transactions'],pagination:{pageIndex:number;pageSize:number}={pageIndex:0,pageSize:10},columnFilters:ColumnFiltersState=[],sorting:SortingState=[]) {
 

@@ -1,6 +1,5 @@
-import { TransactionQueryData } from "@/hooks/useTransactionQuery";
 import { generateMockTransactions } from "@/lib/transactions-helper";
-import { TransactionRow } from "@/types";
+import { TransactionQueryData, TransactionRow } from "@/types";
 import { v7 as uuidv7 } from 'uuid';
 
 

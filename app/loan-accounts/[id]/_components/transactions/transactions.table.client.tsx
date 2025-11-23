@@ -1,9 +1,10 @@
 "use client";
-import { type TransactionQueryData, useTransactionsData } from "@/hooks/useTransactionQuery";
+import { useTransactionsData } from "@/hooks/useTransactionQuery";
 import { type ColumnFiltersState } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useLiveUpdates } from "../../../../../hooks/useLiveUpdates";
 import { TransactionsTable } from "./transactions.table";
+import { TransactionQueryData } from "@/types";
 
 
 const TransactionsDataTable=({
