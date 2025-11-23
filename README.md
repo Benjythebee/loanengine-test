@@ -10,6 +10,8 @@ Example page for this test can be found at [/loan-accounts/[id]](http://localhos
 
 Known issues can be found [here](https://github.com/Benjythebee/loanengine-test/issues)
 
+Tests are automatically run in [github workflows](https://github.com/Benjythebee/loanengine-test/actions)
+
 
 ##  Features
 
