@@ -1,9 +1,9 @@
 import { TableCell, TableRow } from "@/components/primitives/table"
-import { getMockDataMetadata } from "@/mock/data"
+import { getAllMockDataMetadata } from "@/mock/data"
 import { TableRowClientClickable } from "./list.loans.row.client"
 
 
-export const LoansListTableBodyClient = ({loanIds}:{loanIds: ReturnType<typeof getMockDataMetadata>}) => {
+export const LoansListTableBodyClient = ({loanIds}:{loanIds: ReturnType<typeof getAllMockDataMetadata>}) => {
 
     return <>
                 {loanIds.map((loan) => (

@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/primitives/table";
-import { getMockDataMetadata } from "@/mock/data";
+import { getAllMockDataMetadata } from "@/mock/data";
 import { LucideTriangleAlert } from "lucide-react";
 import { Suspense } from "react";
 import { LoansListTableBodyClient } from "./list.loans.client";
@@ -15,7 +15,7 @@ import { LoansListTableBodyClient } from "./list.loans.client";
 const getData = async () => {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  const data = getMockDataMetadata();
+  const data = getAllMockDataMetadata();
 
   return {data, error: null};
 };

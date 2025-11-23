@@ -2,7 +2,7 @@
 import { Checkbox } from '@/components/primitives/checkbox'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/primitives/tooltip'
 import { cn, formatDate } from '@/lib/utils'
-import { type Status, type TransactionRow, type TransactionType } from '@/types'
+import { TRANSACTION_TYPES, type Status, type TransactionRow, type TransactionType } from '@/types'
 import { SortingFn, type ColumnDef } from '@tanstack/react-table'
 import { ArrowDown01Icon, ArrowUp10Icon } from 'lucide-react'
 import { Badge } from '../../../../../components/primitives/badge'
@@ -93,7 +93,8 @@ const columns: ColumnDef<TransactionRow>[] = [
     },
     enableSorting: false,
     meta: {
-      filterVariant: 'select'
+      filterVariant: 'select',
+      filterOptions: TRANSACTION_TYPES as unknown as string[]
     }
   },
   {
@@ -114,6 +115,7 @@ const columns: ColumnDef<TransactionRow>[] = [
     },
     meta: {
       filterVariant: 'select',
+      filterOptions: ['CLEARED', 'PENDING', 'FAILED'] as const
     }
   },{
     header: 'Description',

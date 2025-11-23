@@ -1,64 +1,60 @@
-"use client"
-import { addMockDataTx, getMockTotalPages } from "@/mock/data";
-import type { TransactionRow } from "@/types";
+import { generateMockTransaction, generateMockTransactions } from "@/lib/transactions-helper";
+import { EventEmitter } from "events";
+import { backendData } from "./data";
 
-export function mockWebSocket() {
-  let interval: NodeJS.Timeout;
-  let loanbalance = 1000000;
-  let currentLoanId: string | undefined;
-  let connected = false;
+export default class MockSocket extends EventEmitter {
+  loanId?: string;
+  intervalId?: NodeJS.Timeout;
+  filterTypes?: string[];
+  static instances: number = 0;
+  constructor() {
+    super();
+    MockSocket.instances++;
+    console.log(`MockSocket instance created. Total instances: ${MockSocket.instances}`);
+  }
 
-  let pageIndex: number = 0;
-  let pageSize: number = 10;
+  subscribe = (loanId: string,filterTypes?: string[]) => {
+    this.loanId = loanId;
+    console.log('MockSocket subscribed to loanId:', this.loanId, 'with filters:', filterTypes);
+    this.filterTypes = filterTypes? filterTypes.length > 0 ? filterTypes : undefined : undefined;
+    if(backendData.get(this.loanId! )=== undefined) {
+      const d= generateMockTransactions(20);
+      backendData.set(this.loanId!, {
+        rows: d,
+        closingBalance: d[d.length -1 ].closingBalance
+      });
+    }
+    this.loop();
+  }
 
-  return {
-    pageSettings:{pageIndex, pageSize},
-    connected,
-    currentLoanId,
-    loanbalance,
-    onopen: () => {
-      connected = true;
-      console.log("Mock WebSocket connected");
-    },
-    onclose: () => {
-      connected = false;
-      console.log("Mock WebSocket disconnected");
-    },
+  unsubscribe = () => {
+    this.loanId = undefined;
+    this.filterTypes = undefined;
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = undefined;
+    }
+  }
 
-    setPageSettings({pageIndex, pageSize}: {pageIndex: number, pageSize: number}) {
-      this.pageSettings = {pageIndex, pageSize};
-    },
-    /**
-     * A fake "send" method, that could represent sending a message to the server to say we're interested in a particular loanId
-     */
-    send(loanId: string) {
-      this.currentLoanId = loanId;
-      this.loanbalance = Number((Math.random() * 1000000).toFixed(2));
-      if (interval) {
-        clearInterval(interval);
-      }
-      interval = setInterval(() => {
-
-        const response = addMockDataTx(loanId,true)
-
-        this.loanbalance = response.closingBalance;
-        const totalPages = getMockTotalPages(this.currentLoanId!, this.pageSettings);
-
-        this.onmessage && this.onmessage({rows:response.rows,closingBalance: response.closingBalance, totalPages})
-      }, 1000);
-    },
-
-    onmessage: (message: {rows: TransactionRow[], closingBalance: number, totalPages: number}) => {
-      // Placeholder to be replaced by user
-    },
-
-    disconnect() {
-      clearInterval(interval);
-      this.connected = false;
-      this.currentLoanId = undefined;
-      this.loanbalance = 1000000;
-    },
-  };
+  loop = () => {
+    if(this.intervalId) return
+    this.intervalId = setInterval(()=>{
+      backendData.forEach((value, key) => {
+          // if(Math.random() > 0.7) return; // 30% chance no new transaction
+          const newTx = generateMockTransaction(value.closingBalance,true);
+          newTx.closingBalance = value.closingBalance + (newTx.credit || 0) - (newTx.debit || 0);
+          value.rows.push(newTx);
+          value.closingBalance = newTx.closingBalance;
+          backendData.set(key, value);
+          if(this.loanId === key) {
+            if(!this.filterTypes || this.filterTypes.includes(newTx.type)) {
+              // console.log('MockSocket emitting new transaction for loanId:', this.loanId, newTx);
+              this.emit('message', newTx);
+            }
+          }
+      })
+    },1200)
+  
+  }
+  
 }
-
-export const ws = mockWebSocket(); // <-- only created ONCE

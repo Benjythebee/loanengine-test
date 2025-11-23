@@ -1,12 +1,8 @@
-export type TransactionType =
-  | "ADVANCE"
-  | "PRINCIPAL"
-  | "FEE"
-  | "INTEREST"
-  | "PAYMENT"
-  | "DEFAULT_INTEREST";
+export const TRANSACTION_TYPES = ["ADVANCE", "PRINCIPAL", "FEE", "INTEREST", "PAYMENT", "DEFAULT_INTEREST"] as const;
+export type TransactionType = typeof TRANSACTION_TYPES[number];
 
-export type Status = "CLEARED" | "PENDING";
+export const STATUS_TYPES = ["CLEARED", "PENDING", "FAILED"] as const;
+export type Status = typeof STATUS_TYPES[number];
 
 export interface TransactionRow {
   id: string;
@@ -18,4 +14,12 @@ export interface TransactionRow {
   debit: number | null;
   credit: number | null;
   closingBalance: number;
+}
+
+declare module '@tanstack/react-table' {
+    interface ColumnMeta<TData, TValue> {
+        filterVariant?: 'range' | 'select' | 'text';
+        label?: string;
+        filterOptions?: string[];
+    }
 }

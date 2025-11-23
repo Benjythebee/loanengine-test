@@ -8,7 +8,6 @@ type LoanTransactionsCardProps = {
     searchParams: {
         page?: string;
         size?: string;
-        sort?: string;
     };
 }
 
@@ -19,7 +18,7 @@ export const LoanTransactionsCard = ({loanId,searchParams}:LoanTransactionsCardP
            <CardTitle>Transactions</CardTitle>
           </CardHeader>
           <CardContent className='ps-2 relative'>
-            <Suspense fallback={<TransactionsTableSkeleton filterCount={3} headerCount={7} rowCount={3} />}>
+            <Suspense fallback={<TransactionsTableSkeleton filterCount={3} headerCount={7} rowCount={9} />}>
                 <TransactionTable loanId={loanId} searchParams={searchParams}/>
             </Suspense>
           </CardContent>

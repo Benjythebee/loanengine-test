@@ -7,12 +7,9 @@ import {
   getFacetedMinMaxValues,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import { AlertCircleIcon, LucideRefreshCcw, SearchIcon } from "lucide-react";
+import { AlertCircleIcon, LucideChevronLeft, LucideChevronRight, LucideChevronsLeft, LucideChevronsRight, LucideLoader2, SearchIcon } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import { Input } from "../../../../../components/primitives/input";
 import { Label } from "../../../../../components/primitives/label";
@@ -34,24 +31,22 @@ import {
 
 
 import { Button } from "@/components/primitives/button";
-import { RowPerPage } from "@/components/ui/table/footer/row.per.page";
-import { type TransactionQueryData, useLiveTransactions } from "@/hooks/useTransactionQuery";
+import { type TransactionQueryData, useTransactionsData } from "@/hooks/useTransactionQuery";
 import columns from "./columns";
+import { RefreshButton } from "./refresh-button";
+import { useLiveUpdates } from "./refresh-button/useLiveUpdates";
+
 
 function TransactionsDataTable({
   loanId,
   initialData,
-  totalPages,
   pagination: initialPagination,
   error: serverError,
-  enableLiveDataOnMount = true,
 }: {
   loanId: string;
   initialData?: TransactionQueryData;
   error?: string;
-  totalPages: number;
   pagination: { pageIndex: number; pageSize: number };
-  enableLiveDataOnMount?: boolean;
 }) {
   const [pagination, setPagination] = useState<{
     pageIndex: number;
@@ -64,25 +59,17 @@ function TransactionsDataTable({
     }
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  // const [rowSelection, setRowSelection] = useState({});
-  const [liveDataEnabled, setLiveDataEnabled] = useState(enableLiveDataOnMount);
 
-  const {data:txData,error:clientError,isLoading,isFetching,isPending, refetch,isConnected} = useLiveTransactions(loanId,initialData,pagination,liveDataEnabled);
+  const {data,error:clientError,isLoading,isFetching,isPending, refetch,dataUpdatedAt} = useTransactionsData(loanId,initialData,pagination,columnFilters,sorting);
 
-  const loading = isLoading || isPending || isFetching;
 
+  const loading = isLoading || isPending;
   const error = clientError || serverError;
 
-  // useEffect(() => {
-  //   if(rowSelection && Object.keys(rowSelection).length > 0){
-  //     console.log("Selected rows:", rowSelection);
-  //   }
-  // }, [rowSelection]);
-
   const table = useReactTable({
-    data:txData?.rows||[],
+    data: data?.rows||[],
     columns,
-    pageCount: txData.totalPages,
+    pageCount: data?.totalPages||1,
     state: {
       sorting: sorting,
       columnFilters,
@@ -90,26 +77,27 @@ function TransactionsDataTable({
     },
     manualPagination: true,
     autoResetPageIndex: false,
+    manualFiltering: true,
+    manualSorting: true,
     getRowId: (row) => row.id.toString(),
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    // getPaginationRowModel: getPaginationRowModel(),
+    // getFilteredRowModel: getFilteredRowModel(),
+    // getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
     onSortingChange: setSorting,
-    onPaginationChange: (updater) => {
-      setPagination(updater);
-      refetch();
-    },
+    onPaginationChange: setPagination,
     // onRowSelectionChange: (updater) => {
     //   setRowSelection(updater);      
     // },
     // enableRowSelection: true,
     enableSortingRemoval: false,
   });
+
+    const {newElements} = useLiveUpdates(loanId,columnFilters,dataUpdatedAt);
 
   return (
     <div className="w-full">
@@ -128,105 +116,163 @@ function TransactionsDataTable({
           </div>
 
           <div>
-            <Button variant={'orange'} size="sm" onClick={()=>refetch()} disabled={loading}>
-             <LucideRefreshCcw /> Refresh
-            </Button>
-            {/* <LiveDataButton liveDataEnabled={liveDataEnabled} isConnected={isConnected} onClick={() => setLiveDataEnabled(!liveDataEnabled)} /> */}
+            <RefreshButton indicator={newElements} onClick={refetch} disabled={loading} refreshing={isFetching} />
           </div>
 
         </div>
-       
-      <div className="relative">
-        {loading && !table.getRowModel().rows.length && (
-          <div className="absolute inset-0 z-10 bg-white/50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        )}
 
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="bg-muted/50">
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className="relative h-10 border-t select-none"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody className="relative">
-              {table.getRowModel().rows?.length ? (
-                <>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
+        <div className="relative">
+          {loading && table.getRowModel().rows?.length ==0 && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
+              <div className="animate-spin"><LucideLoader2 /></div>
+            </div>
+          )}
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="bg-muted/50">
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className="relative h-10 border-t select-none"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
                 ))}
-                  { table.getRowModel().rows.length < pagination.pageSize && (
-                    [...Array(pagination.pageSize - table.getRowModel().rows.length)].map((_, index) => (
-                      <TableRow key={`empty-${index}`} className="h-10">
-                        <TableCell colSpan={columns.length}>&nbsp;</TableCell>
-                      </TableRow>
-                    ))
-                  )
-                }</>
-              ) :error ?(
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-red-500"
-                  >
-                    <div className="flex justify-center items-center">
-                      <AlertCircleIcon className="mr-2" />
-                      {String(error)}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : !loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              ):(
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <RowPerPage
-            table={table}
-            // totalpages={totalPages}
-          />
+              </TableHeader>
+              <TableBody className="relative">
+                {table.getRowModel().rows?.length ? (
+                  <>
+                  {table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                    { table.getRowModel().rows.length < pagination.pageSize && (
+                      [...Array(pagination.pageSize - table.getRowModel().rows.length)].map((_, index) => (
+                        <TableRow key={`empty-${index}`} className="h-10">
+                          <TableCell colSpan={columns.length}>&nbsp;</TableCell>
+                        </TableRow>
+                      ))
+                    )
+                  }</>
+                ) :error ?(
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-red-500"
+                    >
+                      <div className="flex justify-center items-center">
+                        <AlertCircleIcon className="mr-2" />
+                        {String(error)}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows.length < pagination.pageSize && (
+                      [...Array(pagination.pageSize - table.getRowModel().rows.length)].map((_, index) => (
+                        <TableRow key={`empty-${index}`} className="h-10 border-0">
+                          <TableCell colSpan={columns.length}>&nbsp;</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+              </TableBody>
+            </Table>
+            <div className="flex items-center justify-between px-4">
+            <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
+              {table.getFilteredSelectedRowModel().rows.length} of{" "}
+              {table.getFilteredRowModel().rows.length} row(s) selected.
+            </div>
+            <div className="flex w-full items-center gap-8 lg:w-fit">
+              <div className="hidden items-center gap-2 lg:flex">
+                <Label htmlFor="rows-per-page" className="text-sm font-medium">
+                  Rows per page
+                </Label>
+                <Select
+                  value={`${table.getState().pagination.pageSize}`}
+                  onValueChange={(value) => {
+                    table.setPageSize(Number(value))
+                  }}
+                >
+                  <SelectTrigger size="sm" className="w-20" id="rows-per-page">
+                    <SelectValue
+                      placeholder={table.getState().pagination.pageSize}
+                    />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {[10, 20, 30, 40, 50].map((pageSize) => (
+                      <SelectItem key={pageSize} value={`${pageSize}`}>
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex w-fit items-center justify-center text-sm font-medium">
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
+              </div>
+              <div className="ml-auto flex items-center gap-2 lg:ml-0">
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to first page</span>
+                  <LucideChevronsLeft />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="size-8"
+                  size="icon"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to previous page</span>
+                  <LucideChevronLeft />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="size-8"
+                  size="icon"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to next page</span>
+                  <LucideChevronRight />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hidden size-8 lg:flex"
+                  size="icon"
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to last page</span>
+                  <LucideChevronsRight />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -234,10 +280,12 @@ function TransactionsDataTable({
 }
 export { TransactionsDataTable };
 
+
+
 function Filter({ column }: { column: Column<any, unknown> }) {
   const id = useId();
   const columnFilterValue = column.getFilterValue();
-  //@ts-expect-error dw w
+
   const { filterVariant, label } = column.columnDef.meta ?? {};
   const columnHeader =
     typeof column.columnDef.header === "string"
@@ -246,6 +294,10 @@ function Filter({ column }: { column: Column<any, unknown> }) {
 
   const sortedUniqueValues = useMemo(() => {
     if (filterVariant === "range") return [];
+
+    if(column.columnDef.meta?.filterOptions){
+      return column.columnDef.meta.filterOptions;
+    }
 
     const values = Array.from(column.getFacetedUniqueValues().keys());
 

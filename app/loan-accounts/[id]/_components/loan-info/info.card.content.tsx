@@ -5,10 +5,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/primitives/card";
-import { useTransactionsCache } from "@/hooks/useTransactionQuery";
+import { useLoanBasicInformation } from "@/hooks/useTransactionQuery";
+import { useMemo } from "react";
 
 export const LoanInfoCardContent = ({ loanId }: { loanId: string }) => {
-  const data = useTransactionsCache(loanId);
+  const {data} = useLoanBasicInformation(loanId);
+
+  const processed = useMemo(() => {
+    return Object.entries(data || {}).filter(([key]) => key !== 'loanId' && key !== 'Total Transactions').map(([key, value]) => ({ key, value }));
+  }, [data]);
 
   return (
     <Card className="grid grid-cols-1 my-2">
@@ -18,37 +23,12 @@ export const LoanInfoCardContent = ({ loanId }: { loanId: string }) => {
       <CardContent className="ps-2">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 ">
           <div className="flex flex-col gap-2">
-            {[
-              {
-                label: "Principal (IB) balance:",
-                value: 5000000,
-              },
-              {
-                label: "Principal (NIB) balance:",
-                value: 0.0,
-              },
-              {
-                label: "Interest balance:",
-                value: 0.0,
-              },
-              {
-                label: "Fee (IB) balance:",
-                value: 0.0,
-              },
-              {
-                label: "Fee (NIB) balance:",
-                value: 0.0,
-              },
-              {
-                label: "Closing balance",
-                value: (data?.closingBalance || 0).toLocaleString(),
-              },
-            ].map((item) => (
+            {processed.slice(0,6).map((item) => (
               <div
-                key={item.label}
+                key={item.key}
                 className="flex justify-between items-center"
               >
-                <h3 className="text-sm font-medium">{item.label}</h3>
+                <h3 className="text-sm font-medium">{item.key}</h3>
                 <p className="text-sm text-muted-foreground">
                   ${item.value.toLocaleString()}
                 </p>
@@ -56,37 +36,12 @@ export const LoanInfoCardContent = ({ loanId }: { loanId: string }) => {
             ))}
           </div>
           <div className="flex flex-col gap-2">
-            {[
-              {
-                label: "Principal (18) paid:",
-                value: 0.0,
-              },
-              {
-                label: "Principal (NIB) paid:",
-                value: 0.0,
-              },
-              {
-                label: "Interest paid:",
-                value: 0.0,
-              },
-              {
-                label: "Fees (IB) paid:",
-                value: 0.0,
-              },
-              {
-                label: "Fees (NIB) paid:",
-                value: 0.0,
-              },
-              {
-                label: "Total Paid:",
-                value: 0.0,
-              },
-            ].map((item) => (
+            {processed.slice(6,11).map((item) => (
               <div
-                key={item.label}
+                key={item.key}
                 className="flex justify-between items-center"
               >
-                <h3 className="text-sm font-medium">{item.label}</h3>
+                <h3 className="text-sm font-medium">{item.key}</h3>
                 <p className="text-sm text-muted-foreground">
                   ${item.value.toLocaleString()}
                 </p>

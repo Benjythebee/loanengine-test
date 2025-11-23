@@ -1,50 +1,88 @@
-import { mockWebSocket } from "@/mock/mockSocket";
-import { useEffect, useEffectEvent, useState } from "react";
+'use client'
+import MockSocket from '@/mock/mockSocket';
+import { TransactionRow } from '@/types';
+import { useEffect } from 'react';
+import { create } from 'zustand';
 
-export const useWebSocket = () => {
-    const [ws, setWs] = useState<ReturnType<typeof mockWebSocket>|null>(null);
+interface WebSocketState {
+  isConnected: boolean;
+  latestTransaction: TransactionRow | null;
+  socket: MockSocket | null;
+  subscribe: (loanId: string, filterTypes?: string[]) => void;
+  unsubscribe: () => void;
+  getSocket: () => MockSocket;
+}
 
-    const [isConnected, setIsConnected] = useState(false);
-    const [subscribers, setSubscribers] = useState<((data: any) => void)[]>([]);
-
-    const onMessageSubscribed = useEffectEvent((data: any) => {
-        console.log(subscribers)
-        subscribers.forEach(subscriber => subscriber(data));      
-    })
-
-    const connect = () => {
-        const ws = mockWebSocket(); // Replace with new WebSocket(url) for real implementation
-        setWs(ws);
-        ws.onopen = () => {
-            setIsConnected(true);
+export const useWebSocket = create<WebSocketState>()((set, get) => ({
+    isConnected: false,
+    latestTransaction: null,
+    socket: null,
+    getSocket: () => {
+        let socket = get().socket;
+        if(!socket){
+            socket = new MockSocket();
+            set({ socket });
         }
-        ws.onmessage = onMessageSubscribed
-        ws.onclose = () => {
-            setIsConnected(false);
+        return socket;
+    },
+    subscribe: (loanId: string, filterTypes?: string[]) => {
+      const socket = get().getSocket();
+      
+      // Clean up existing socket if any
+      if (socket) {
+        socket.unsubscribe();
+        socket.removeAllListeners();
+      }
+      // Set up message listener for new transactions
+      socket.on('message', (transaction: TransactionRow) => {
+        // console.log('WebSocket received new transaction:', transaction);
+        set({ latestTransaction: transaction });
+      });
+
+      // Subscribe to the loan
+      socket.subscribe(loanId, filterTypes);
+
+      set({ 
+        isConnected: true,
+        latestTransaction: null // Reset latest transaction when subscribing to new loan
+      });
+    },
+
+    unsubscribe: () => {
+      const { socket } = get();
+      if (socket) {
+        socket.unsubscribe();
+        socket.removeAllListeners();
+      }
+      
+      set({ 
+        socket: null, 
+        isConnected: false, 
+        latestTransaction: null 
+      });
+    }
+}))
+
+// Custom hook for easier usage - only returns what's needed
+export const useTransactionWebSocket = ({loanId, filterTypes}: {loanId: string, filterTypes?: string[]}) => {
+  const { isConnected, latestTransaction, subscribe, unsubscribe } = useWebSocket();
+  
+    useEffect(() => {
+        if(loanId){
+            subscribe(loanId, filterTypes);
         }
-
-        ws.onopen();
-    }
-
-    const disconnect = () => {
-        ws?.disconnect();
-        setWs(null);
-    }
-
-    const subscribe = (callback: (data: any) => void) => {
-        setSubscribers(prev => [...prev, callback]);
-    }
-
-    const unsubscribe = (callback: (data: any) => void) => {
-        setSubscribers(prev => prev.filter(sub => sub !== callback));
-    }
+    }, [loanId, filterTypes]);
 
     useEffect(() => {
-        if(!ws){
-            connect();
-        }
-    }, [ws]);
+        return () => {
+            unsubscribe();
+        };
+    },[])
 
-    return { isConnected, connect, disconnect, subscribe, unsubscribe, ws };
-
-}
+  return {
+    isConnected,
+    latestTransaction,
+    subscribe,
+    unsubscribe,
+  };
+};
