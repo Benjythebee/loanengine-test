@@ -9,6 +9,9 @@ type LoanTransactionsCardProps = {
     searchParams: {
         page?: string;
         size?: string;
+        /**
+         * This is just to trigger SSR with fake data for demo purposes
+         */
         withFakeSSR?: string;
     };
 }

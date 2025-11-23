@@ -40,20 +40,66 @@ import columns from "./columns";
 import { RefreshButton } from "./refresh-button";
 
 export interface TransactionsTableProps {
+  /**
+   * The data to display in the table
+   */
   data: TransactionRow[];
+  /**
+   * Total number of rows available (for react-table pagination)
+   */
   totalRows?: number;
+  /**
+   * Pagination state
+   */
   pagination: { pageIndex: number; pageSize: number };
+  /**
+   * Callback when pagination changes
+   */
   onPaginationChange: (updater: any) => void;
+  /**
+   * Sorting state
+   */
   sorting: SortingState;
+  /**
+   * Callback when sorting changes
+   */
   onSortingChange: (updater: any) => void;
+  /**
+   * Column filters state
+   */
   columnFilters: ColumnFiltersState;
+  /**
+   * Callback when column filters change
+   */
   onColumnFiltersChange: (updater: any) => void;
+  /**
+   * Loading state
+   */
   isLoading?: boolean;
+  /**
+   * Fetching state
+   */
   isFetching?: boolean;
+  /**
+   * Error message to display (if any)
+   */
   error?: string;
+  /**
+   * Callback to refresh the table data
+   */
   onRefresh?: () => void;
+  /**
+   * Whether the refresh button is disabled
+   */
   refreshDisabled?: boolean;
+  /**
+   * Number of new elements available for refresh
+   */
   newElementsCount?: number;
+  /**
+   * Whether client-side interactions (pagination, sorting, filtering) are enabled
+   * This is only used in test stories to simulate client-side behavior
+   */
   clientSideInteractions?: boolean;
 }
 

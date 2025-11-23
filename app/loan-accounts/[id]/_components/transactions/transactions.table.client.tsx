@@ -12,9 +12,21 @@ const TransactionsDataTable=({
   pagination: initialPagination,
   error: serverError,
 }: {
+  /**
+   * Loan ID for which to display transactions
+   */
   loanId: string;
+  /**
+   * Initial data for server-side rendering (optional)
+   */
   initialData?: TransactionQueryData;
+  /**
+   * Error message from server-side rendering (optional)
+   */
   error?: string;
+  /**
+   * Initial pagination settings (from searchParams or similar)
+   */
   pagination: { pageIndex: number; pageSize: number };
 }) =>{
   const [pagination, setPagination] = useState<{
